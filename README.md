@@ -15,16 +15,20 @@ Feature as Below:
 
 ### Prerequisite
 
+1MBD is designed to work with Apache ANT, So we need to perform the following steps before go for 1MBD.<br/>
+
+* JAVA SDK 1.8 or above
+* Apache ANT 1.9 or above
 
 ## USAGE
 
-## Bugs and Issues
+## BUGS and ISSUES
 
 Have a bug or an issue with this framework? [Open a new issue](https://github.com/w3ng/1MBD/issues) here on GitHub or <br/>
 Email your comments or ideas to me. [Email : wkweng7470@gmail.com](wkweng7470@gmail.com).
 
 
-## Creator
+## CREATOR
 
 This framework maintained by [Wong Kar Weng](wkweng7470@gmail.com)
 
