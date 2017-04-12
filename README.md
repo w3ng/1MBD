@@ -76,9 +76,9 @@ This framework maintained by [Wong Kar Weng](wkweng7470@gmail.com)
 ## What's Next
 Currently creating 1MDB version II
 * Targeting 90% configuration, 10% or below in coding
-* Use JSON instead of Properties in configuration
+* Use JSON instead of text format in configuration
 * Support more SCM like github, teamforge.
-* better notifications
+* support multiple way of notifications.
 * simplify build and deployment process.
 
 
