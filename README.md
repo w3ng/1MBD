@@ -73,5 +73,12 @@ Email your comments or ideas to me. [Email : wkweng7470@gmail.com](wkweng7470@gm
 
 This framework maintained by [Wong Kar Weng](wkweng7470@gmail.com)
 
+## What's Next
+Currently creating 1MDB version II
+* Targeting 90% configuration, 10% or below in coding
+* Use JSON instead of Properties in configuration
+* Support more SCM like github, teamforge.
+* better notifications
+* simplify build and deployment process.
 
 
