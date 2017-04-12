@@ -13,7 +13,8 @@ Feature as Below:
    
 ## INSTALLATION
 
-### Prerequite
+### Prerequisite
+
 
 ## USAGE
 
