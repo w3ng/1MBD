@@ -1,15 +1,13 @@
 # 1MBD
 One Managed Build &amp; Deployment
 
-1MBD is a build framework which writen in Apache Ant. 
-Feature as Below:
-* it allows configured once,build everywhere no matter in local machine, ide, or build sever
-* another featured is support Countinous Integration. 
-1. it very easy to extend to other project or product.
-2. and easy to linked to other build tools, these can become web ui for 1mbd. 
-3. not only that, easy write ur own UDF
-4. maven, u also can integrate with maven and typical build process
-5. it also can be act as build tool, as it support deploy and notification.
+1MBD is a Countinous Integration build framework or extensive build tool that writen in Apache Ant. <br/><br/>
+Basic Feature as below : <br/>
+* It allows configured once, build everywhere no matter in local machine, ide, or build sever; <br/>
+* Easy to Integrate with build tools like Hudson, Jenkins and etc <br/>
+* Allow to create own UDF (User Defined Function); <br/>
+* Integrate with any typical build process and maven; <br/>
+* Capable to deploy to other machines and send notification. <br/>
    
 ## INSTALLATION
 
@@ -26,7 +24,7 @@ Download the ANT version 1.9 or above is high recommanded. <br/>
 Link : https://ant.apache.org/bindownload.cgi <br/>
 
 ### Install 1MBD
-1. download the zip file from GITHUB
+1. download the zip file from github
 2. unzip the file.
 
 ## USAGE
