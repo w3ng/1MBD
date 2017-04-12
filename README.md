@@ -17,8 +17,16 @@ Feature as Below:
 
 1MBD is designed to work with Apache ANT, So we need to perform the following steps before go for 1MBD.<br/>
 
-* JAVA SDK 1.8 or above
-* Apache ANT 1.9 or above
+* JAVA SDK 1.8 or above <br/>
+Download the SDK version 1.8 or above is high recommanded. <br/>
+Link : http://www.oracle.com/technetwork/java/javase/downloads/index.html  <br/>
+
+* Apache ANT 1.9 or above <br/>
+Download the ANT version 1.9 or above is high recommanded. <br/>
+Link : https://ant.apache.org/bindownload.cgi <br/>
+
+#### Install 1MBD
+1. download and unzip
 
 ## USAGE
 
