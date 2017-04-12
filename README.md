@@ -26,7 +26,8 @@ Download the ANT version 1.9 or above is high recommanded. <br/>
 Link : https://ant.apache.org/bindownload.cgi <br/>
 
 #### Install 1MBD
-1. download and unzip
+1. download the zip file from GITHUB
+2. unzip the file.
 
 ## USAGE
 
