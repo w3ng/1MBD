@@ -1,0 +1,32 @@
+<project name="SMObuild" default="bt:buildProcess" basedir=".">
+	
+	<property environment="env"/>		
+	<import file="build.xml" />	
+	
+	<target name="buildPath">
+		<appModule option="mapreduce">
+			<mkdir dir="${app.work.bin}/mapreduce" />
+		</appModule>	
+	</target>
+
+	<target name="compile">
+		<path id="master-classpath">
+			<fileset dir="${app.work.src}/lib">
+		         <include name="*.jar"/>
+		    </fileset>
+		</path>
+		
+		<appModule option="mapreduce">				
+			<javac destdir="${app.work.bin}/mapreduce" includeantruntime="false" source="1.5" target="1.5">
+				<src path="${app.work.src}/apps/mapreduce"/>
+			    <classpath refid="master-classpath"/>
+			</javac>
+		</appModule>	
+	</target>
+	
+	<target name="packaging">
+		<appModule option="mapreduce">	
+			<jar destfile="${app.work.deploy}/mapreduce.jar" basedir="${app.work.bin}/mapreduce" />
+		</appModule>	
+	</target>
+</project>

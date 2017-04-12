@@ -1,0 +1,87 @@
+<project name="build" default="bt:buildProcess" basedir="." >
+	
+	<property environment="env"/>
+			
+	<import file="${env.BUILD_HOME}/builder.xml" />
+	
+	<target name="init">
+		<echo>${app.test}</echo>
+		<var name="app.test" unset="true"/>
+		<property name="app.test" value="33333"/>
+	</target>
+	
+	<target name="buildPath">		
+		<appModule option="libs">
+			<mkdir dir="${app.work.bin}/libs" />
+		</appModule>
+		<appModule option="scripts">
+			<mkdir dir="${app.work.bin}/scripts" />
+		</appModule>
+		<appModule option="demoWeb">
+			<mkdir dir="${app.work.bin}/demoWeb" />
+		</appModule>		
+	</target>
+	
+	<target name="setEnv">
+		<appModule option="demoWeb">
+			<echo message="Hellow, ${app.name}" file="${app.work.bin}/demoWeb/index.html" />
+		</appModule>		
+	</target>
+	
+	<target name="compile">
+		
+		<path id="master-classpath">
+			<fileset dir="${app.work.src}/lib">
+		         <include name="*.jar"/>
+		    </fileset>
+		</path>		
+		
+		<appModule option="demoWeb">	
+			<property name="demoWeb.src" value="${app.work.src}/webapps/demoWeb"/>
+			<copy todir="${app.work.bin}/demoWeb">
+				<fileset dir="${demoWeb.src}/webroot"/>
+			</copy>	
+		</appModule>	
+		
+		<appModule option="libs">
+			<copy todir="${app.work.bin}/libs">
+			    <fileset dir="${app.work.src}/lib" />
+			  </copy>
+		</appModule>
+		
+		<appModule option="scripts">
+			<copy todir="${app.work.bin}/scripts">
+			    <fileset dir="${app.work.src}/bin">
+			      <exclude name="**/*"/>
+			    </fileset>
+			  </copy>
+		</appModule>
+	</target>
+	
+	<target name="packaging">
+		
+		<appModule option="demoWeb">	
+			<property name="demoWeb.src" value="${app.work.src}/webapps/demoWeb"/>
+			<war destfile="${app.work.deploy}/demoWeb.war" webxml="${demoWeb.src}/webroot/WEB-INF/web.xml">
+				 <fileset dir="${app.work.bin}/demoWeb"/>
+			</war>
+		</appModule>
+		
+		<appModule option="libs">
+			<!--tar destfile="${app.work.bin}/libs.tar" basedir="${app.work.bin}/libs"/>
+			<gzip destfile="${app.work.deploy}/libs.tar.gz" src="${app.work.bin}/libs.tar" //-->
+			<copy todir="${app.work.deploy}/lib">
+			    <fileset dir="${app.work.bin}/libs"/>
+			 </copy>
+		</appModule>
+		
+		<appModule option="scripts">
+			<copy todir="${app.work.deploy}/bin">
+				<fileset dir="${app.work.bin}/scripts"/>
+			</copy>
+			<!--tar destfile="${app.work.bin}/scripts.tar" basedir="${app.work.bin}/scripts"/>
+			<gzip destfile="${app.work.deploy}/scripts.tar.gz" src="${app.work.bin}/scripts.tar"//-->
+		</appModule>		
+	</target>	
+
+</project>
