@@ -29,8 +29,39 @@ Link : https://ant.apache.org/bindownload.cgi <br/>
    BUILD_HOME=&lt;path&gt;
 
 ## USAGE
+1. create profile &lt;name&gt;.profile in your projects or application folder.
+```
+app.source=<name>
+app.opts=ALL
 
+#################################################
+###            BUILD - LOCAL                 ####
+#################################################
+local.path=
+local.delete=false
 
+#################################################
+###            DEPLOY - LOCAL                ####
+#################################################
+deployer.localhost.path.backup=
+```
+<br/>
+
+2. create build.xml with the below content in your projects or application folder.
+```
+<project name="build" default="bt:buildProcess" basedir="." >
+	
+	<property environment="env"/>			
+	<import file="${env.BUILD_HOME}/builder.xml" />
+
+</project>
+```
+<br/>
+
+3. execute
+```
+ant -f build.xml
+```
 
 ## BUGS and ISSUES
 
