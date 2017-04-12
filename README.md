@@ -18,3 +18,13 @@ Feature as Below:
 
 ## USAGE
 
+## Bugs and Issues
+
+Have a bug or an issue with this framework? [Open a new issue](https://github.com/w3ng/1MBD/issues) here on GitHub or email your comments to me. [Email : wkweng7470@gmail.com](wkweng7470@gmail.com).
+
+## Creator
+
+This framework maintained by **[Wong Kar Weng](wkweng7470@gmail.com)
+
+
+
