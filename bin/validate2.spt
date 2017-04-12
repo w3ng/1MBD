@@ -1,0 +1,11 @@
+WRK_DIR="";
+JOB_NM="${app.jobName}";
+
+if [ -n $WRK_DIR ] && [ -d $WRK_DIR ]; then cd "$WRK_DIR"; else echo "[ERROR] WORKING DIRCTORY : $WRK_DIR not exists"; exit 1; fi;
+if [ -d $JOB_NM ]; then echo "[ERROR] DIRCTORY : $JOB_NM  already exists"; exit 1; fi;
+mkdir $JOB_NM;
+mkdir "$JOB_NM/deploy";
+if [ $? != 0 ]; then echo "[ERROR] Failed to Create Folder : $JOB_NM"; exit 1; fi;
+cd $JOB_NM;
+pwd;
+exit 0;

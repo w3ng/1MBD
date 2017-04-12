@@ -1,0 +1,28 @@
+<project name="func_prop">
+
+	<macrodef name="isPropertyNotEmpty">
+	    <attribute name="property"/>
+  		<element name="process" implicit="yes"/>		
+	<sequential>
+		<if><isset property="@{property}" />
+			<then>
+				<isNotEmpty value="${@{property}}"><process /></isNotEmpty>
+			</then>
+		</if>
+	</sequential>
+	</macrodef>	
+	
+	<macrodef name="isPropertyEmpty">
+	    <attribute name="property"/>
+  		<element name="process" implicit="yes"/>		
+	<sequential>
+		<if><isset property="@{property}" />
+			<then>
+				<isEmpty value="${@{property}}"><process /></isEmpty>
+			</then>
+			<else><process /></else>
+		</if>
+	</sequential>
+	</macrodef>
+
+</project>

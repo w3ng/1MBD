@@ -1,0 +1,260 @@
+<project name="bone">
+	<macrodef name="appModule">
+		<attribute name="option"/>
+		<element name="process" implicit="yes"/>
+ 	<sequential>
+ 		<local name="temp" />
+ 		<getProperty1 name="temp" propertyName="app.opt.${app.deploy}" />
+ 		<ifBitMatch input="${builder.@{option}.idx}" value="${temp}">
+ 			<process />
+ 		</ifBitMatch>  
+	</sequential>
+	</macrodef>
+	
+ 	<macrodef name="generateBit">
+ 	<sequential> 		
+ 		<var name="bit" value="1" />
+ 	
+ 		<isNotNullOrBlank_property name="app.opts" failonerror="true" showWarning="[ERR] PROPERTY : app.opts is empty.">
+ 			<for list="${app.opts}" param="opt" delimiter="," trim="true">
+ 			<sequential>
+ 				<property name="app.opt.@{opt}" value="${bit}" />
+ 				
+ 				<math result="bit" operand1="${bit}" operation="*" operand2="2" datatype="int"/>
+ 				
+ 				<var name="bit" value="${bit}"/>
+ 			</sequential>
+ 			</for>
+ 			
+ 			<!-- calculate mapper and set new value //-->
+ 			<for list="${app.opts}" param="opt" delimiter="," trim="true">
+ 			<sequential>
+ 				<var name="cv" value="${app.opt.@{opt}}" />
+								
+ 				<isNotNullOrBlank_property name="builder.@{opt}.mapper" >
+ 					<for list="${builder.@{opt}.mapper}" param="mp" delimiter="," trim="true">
+ 					<sequential>
+ 						<if>
+ 							<isset property="builder.@{mp}.idx" />
+ 							<then>
+  								<var name="tv" value="${builder.@{mp}.idx}" />
+ 								<var name="builder.@{mp}.idx" unset="true"/>
+ 								<math result="builder.@{mp}.idx" operand1="${tv}" operation="+" operand2="${cv}" datatype="int"/>					
+ 							</then>
+ 							<else>
+ 								<math result="builder.@{mp}.idx" operand1="${app.opt.@{mp}}" operation="+" operand2="${cv}" datatype="int"/>
+ 							</else> 							
+ 						</if>
+ 					</sequential>
+ 					</for>
+ 				</isNotNullOrBlank_property>
+ 				 				
+ 				<isNullOrBlank_property name="builder.@{opt}.idx">
+ 					<property name="builder.@{opt}.idx" value="${cv}"/>
+ 				</isNullOrBlank_property>
+ 			</sequential>
+ 			</for>
+ 			
+ 			<!-- print 
+ 			<for list="${app.opts}" param="opt" delimiter="," trim="true">
+ 			<sequential>
+ 				<echo message="builder.@{opt}.idx : ${builder.@{opt}.idx}" />
+ 			</sequential>
+ 			</for>
+ 			
+ 			<for list="${app.opts}" param="opt" delimiter="," trim="true">
+ 			<sequential>
+ 				<echo message="app.opt.@{opt} : ${app.opt.@{opt}}" />
+ 			</sequential>
+ 			</for> //-->
+ 		</isNotNullOrBlank_property>
+ 	</sequential>
+ 	</macrodef>
+ 	
+ 	<macrodef name="deploy.local.stopService"> 
+  	<sequential>
+  		<local name="isWindows" />
+  		<local name="isLinux" />
+  		<var name="out" value="" />
+  		<var name="rs" value="" />
+  		<var name="err" value="" />
+  		  	
+  		<condition property="isWindows"><os family="windows" /></condition>
+    	<condition property="isLinux"><os family="unix" /></condition>
+  	  	
+  	  	<var name="executor" value="" />
+  	  	<ifValueMatch value="${isWindows}" input="true">
+  	  		<var name="executor" value="cmd" />
+  	  	</ifValueMatch>
+  	  	<ifValueMatch value="${isLinux}" input="true">
+  	  		<var name="executor" value="/bin/bash" />
+  	  	</ifValueMatch>
+  	  	
+  		<for list="${app.opts}" param="opt" delimiter="," trim="true">
+ 		<sequential>
+ 			<appModule option="@{opt}">
+ 				<isNotNullOrBlank_property name="deployer.localhost.@{opt}.stop">
+ 					<echo message="execute ${executor} : ${deployer.localhost.@{opt}.stop}" />
+ 					<exec executable="${executor}" failonerror="false" outputproperty="out" resultproperty="rs" errorproperty="err">
+  						<arg value="/c ${deployer.localhost.@{opt}.stop}" />  
+					</exec> 
+					<echo message=" ${rs} : ${out} - ${err}" />				
+ 				</isNotNullOrBlank_property>
+ 			</appModule>	
+ 		</sequential>
+ 		</for>
+  	</sequential>
+  	</macrodef>	 	
+
+ 	<macrodef name="deploy.local.backup">
+ 		<attribute name="path"/> 	 
+  	<sequential>
+  		<ifValidPath path="@{path}" isFile="false">
+  			<echo message="BACKUP DIRECTORY : @{path}   [${app.deploy}]" />
+  			
+  			<for list="${app.opts}" param="opt" delimiter="," trim="true">	
+  			<sequential>
+  				<appModule option="@{opt}">
+  					<isNotNullOrBlank_property name="deployer.localhost.@{opt}.source">
+  						<for list="${deployer.localhost.@{opt}.source}" param="src" delimiter="," trim="true">
+						<sequential>
+							<ifValidPath path="${deployer.localhost.@{opt}.path.deploy}/@{src}" isFile="false">							    
+							    <mkdir dir="@{path}/@{src}"/>
+								<copy todir="@{path}/@{src}" overwrite="true">
+    								<fileset dir="${deployer.localhost.@{opt}.path.deploy}/@{src}" includes="**/*" />
+  								</copy>
+  								<echo message="Backup Directory : ${deployer.localhost.@{opt}.path.deploy}/@{src}   [DONE]" />
+							</ifValidPath>
+							
+							<ifValidPath path="${deployer.localhost.@{opt}.path.deploy}/@{src}">								
+								<copy file="${deployer.localhost.@{opt}.path.deploy}/@{src}" todir="@{path}" overwrite="true"/>
+								<echo message="Backup File : ${deployer.localhost.@{opt}.path.deploy}/@{src}   [DONE]" />
+							</ifValidPath> 
+						</sequential>
+						</for>
+  					</isNotNullOrBlank_property>
+  				</appModule>
+ 			</sequential>
+ 			</for>
+  		</ifValidPath>	  	
+
+  	</sequential>
+  	</macrodef>
+  	
+  	<macrodef name="deploy.local.delete"> 
+  	<sequential>
+  		<for list="${app.opts}" param="opt" delimiter="," trim="true">	
+  		<sequential>
+  			<appModule option="@{opt}">
+  				<isNotNullOrBlank_property name="deployer.localhost.@{opt}.source">
+  					<for list="${deployer.localhost.@{opt}.source}" param="src" delimiter="," trim="true">
+					<sequential>
+						<ifValidPath path="${deployer.localhost.@{opt}.path.deploy}/@{src}" isFile="false">
+							<delete includeemptydirs="true">
+    							<fileset dir="${deployer.localhost.@{opt}.path.deploy}/@{src}" includes="**/*"/>
+  							</delete>   
+							
+  							<echo message="Delete Directory : ${deployer.localhost.@{opt}.path.deploy}/@{src}   [DONE]" />
+						</ifValidPath>
+							
+						<ifValidPath path="${deployer.localhost.@{opt}.path.deploy}/@{src}">
+							<delete file="${deployer.localhost.@{opt}.path.deploy}/@{src}"/>							
+							<echo message="Backup File : ${deployer.localhost.@{opt}.path.deploy}/@{src}   [DONE]" />
+						</ifValidPath> 
+					</sequential>
+					</for>
+  				</isNotNullOrBlank_property>
+  				
+  				<isNotNullOrBlank_property name="deployer.localhost.@{opt}.path.dump">
+  					<echo message="REMOVE DUMP   [${app.deploy}]" />
+  					<for list="${deployer.localhost.@{opt}.path.dump}" param="delPath" delimiter="," trim="true">
+					<sequential>
+						<ifValidPath path="@{delPath}" isFile="false">
+							<delete includeemptydirs="true">
+    							<fileset dir="@{delPath}" includes="**/*"/>
+  							</delete>   
+							
+  							<echo message="Delete Directory : @{delPath}   [DONE]" />
+						</ifValidPath>
+							
+						<ifValidPath path="@{delPath}">
+							<delete file="@{delPath}"/>							
+							<echo message="Backup File : @{delPath}   [DONE]" />
+						</ifValidPath> 
+					</sequential>
+					</for>
+  				</isNotNullOrBlank_property>
+  			</appModule>
+ 		</sequential>
+ 		</for>
+  	</sequential>
+  	</macrodef> 
+  	
+  	<macrodef name="deploy.local.deploy"> 
+  	<sequential>
+  		<echo message="DEPLOYING   [${app.deploy}]" />
+  			
+  		<for list="${app.opts}" param="opt" delimiter="," trim="true">	
+  		<sequential>
+  			<appModule option="@{opt}">
+  				<isNotNullOrBlank_property name="deployer.localhost.@{opt}.source">
+  					<for list="${deployer.localhost.@{opt}.source}" param="src" delimiter="," trim="true">
+					<sequential>
+						<ifValidPath path="${app.work.deploy}/@{src}" isFile="false">
+							<mkdir dir="${deployer.localhost.@{opt}.path.deploy}/@{src}"/>
+							<copy todir="${deployer.localhost.@{opt}.path.deploy}/@{src}" overwrite="true">
+    							<fileset dir="${app.work.deploy}/@{src}" includes="**/*" />
+  							</copy>
+  							<echo message="Deploy Directory :${deployer.localhost.@{opt}.path.deploy}/@{src}   [DONE]" />
+						</ifValidPath>
+						
+						<ifValidPath path="${app.work.deploy}/@{src}">								
+							<copy file="${app.work.deploy}/@{src}" todir="${deployer.localhost.@{opt}.path.deploy}" overwrite="true"/>
+							<echo message="Backup File : ${app.work}/@{src}   [DONE]" />
+						</ifValidPath> 
+					</sequential>
+					</for>
+  				</isNotNullOrBlank_property>
+  			</appModule>
+ 		</sequential>
+ 		</for>
+  	</sequential>
+  	</macrodef>
+
+  	<macrodef name="deploy.local.startService"> 
+  	<sequential>
+  		<local name="isWindows" />
+  		<local name="isLinux" />
+  		<var name="out" value="" />
+  		<var name="rs" value="" />
+  		<var name="err" value="" />
+  		  	
+  		<condition property="isWindows"><os family="windows" /></condition>
+    	<condition property="isLinux"><os family="unix" /></condition>
+  	  	
+  	  	<var name="executor" value="" />
+  	  	<ifValueMatch value="${isWindows}" input="true">
+  	  		<var name="executor" value="cmd" />
+  	  	</ifValueMatch>
+  	  	<ifValueMatch value="${isLinux}" input="true">
+  	  		<var name="executor" value="/bin/bash" />
+  	  	</ifValueMatch>
+  	  	
+  		<for list="${app.opts}" param="opt" delimiter="," trim="true">
+ 		<sequential>
+ 			<appModule option="@{opt}">
+ 				<isNotNullOrBlank_property name="deployer.localhost.@{opt}.start">
+ 					<echo message="execute ${executor} : ${deployer.localhost.@{opt}.start}" />
+ 					<exec executable="${executor}" failonerror="false" outputproperty="out" resultproperty="rs" errorproperty="err">
+  						<arg value="/c ${deployer.localhost.@{opt}.start}" />  
+					</exec> 
+					<echo message=" ${rs} : ${out} - ${err}" />				
+ 				</isNotNullOrBlank_property>
+ 			</appModule>	
+ 		</sequential>
+ 		</for>
+  	</sequential>
+  	</macrodef>
+ 
+
+</project>

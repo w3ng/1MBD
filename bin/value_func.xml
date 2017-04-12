@@ -1,0 +1,84 @@
+<project name="value_function">
+  	<macrodef name="ifNotEmpty"> 
+	    <attribute name="value"/> 		
+	    <attribute name="failonerror" default="false"/>
+  		<attribute name="showWarning" default=""/>
+  		<element name="process" implicit="yes"/>
+  	<sequential>
+  		<if>
+  			<not><equals arg1="@{value}" arg2=""/></not>
+  			<then>
+  				<process />
+  			</then>
+  			<elseif>
+  				<equals arg1="@{failonerror}" arg2="true"/>
+  				<then>
+  					<fail message="Path : @{path} is empty [FAIL]" />
+  				</then>
+  			</elseif>
+  			<elseif>  			
+  				<not><equals arg1="@{showWarning}" arg2=""/></not>
+  				<then>
+  					<echo message="@{showWarning}" level="warning"/>
+  				</then>
+  			</elseif>
+  		</if>	  	
+  	</sequential>
+ 	</macrodef>
+ 	
+ 	<macrodef name="ifEmpty"> 
+	    <attribute name="value"/> 		
+	    <attribute name="failonerror" default="false"/>
+  		<attribute name="showWarning" default=""/>
+  		<element name="process" implicit="yes"/>
+  	<sequential>
+  		<if>
+  			<equals arg1="@{value}" arg2=""/>
+  			<then>
+  				<process />
+  			</then>
+  			<elseif>
+  				<equals arg1="@{failonerror}" arg2="true"/>
+  				<then>
+  					<fail message="Path : @{path} is empty [FAIL]" />
+  				</then>
+  			</elseif>
+  			<elseif>
+  				<not><equals arg1="@{showWarning}" arg2=""/></not>
+  				<then>
+  					<echo message="@{showWarning}" level="warning"/>
+  				</then>
+  			</elseif>
+  		</if>	  	
+  	</sequential>
+ 	</macrodef>
+ 	
+ 	<macrodef name="ifValueMatch"> 
+	    <attribute name="value"/>
+	    <attribute name="input"/> 		
+	    <attribute name="failonerror" default="false"/>
+  		<attribute name="showWarning" default=""/>
+  		<element name="process" implicit="yes"/>
+  	<sequential>
+  		<if>
+  			<equals arg1="@{value}" arg2="@{input}"/>
+  			<then>
+  				<process />
+  			</then>
+  			<elseif>
+  				<equals arg1="@{failonerror}" arg2="true"/>
+  				<then>
+  					<fail message="Path : @{path} is empty [FAIL]" />
+  				</then>
+  			</elseif>
+  			<elseif>
+  				<not><equals arg1="@{showWarning}" arg2=""/></not>
+  				<then>
+  					<echo message="@{showWarning}" level="warning"/>
+  				</then>
+  			</elseif>
+  		</if>	  	
+  	</sequential>
+ 	</macrodef>	
+ 	
+</project>

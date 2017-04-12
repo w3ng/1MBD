@@ -1,0 +1,12 @@
+<project name="<Name>" default="bt:buildProcess" basedir=".">
+	
+	<property environment="env"/>		
+	<import file="${env.BUILD_HOME}/builder.xml" />
+	
+	<target name="init"></target>
+	<target name="buildPath"></target>
+	<target name="setEnv"></target>
+	<target name="compile"></target>
+	<target name="packaging"></target>
+	<target name="deploy"></target>
+</project>

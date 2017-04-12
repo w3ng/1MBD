@@ -1,0 +1,19 @@
+<project name="default" default="default" basedir=".">
+	<property environment="env"/>	
+	<!--  load library -->
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${env.BUILD_HOME}/lib/ant-contrib-1.0b3.jar" />
+	
+
+	<loadfile property="file" srcfile="jar.txt"/>
+
+	<target name="default">
+		<for param="line" list="${file}" delimiter="${line.separator}">
+		      <sequential>
+		        <echo>@{line}</echo>
+		      	<copy file="@{line}" todir="C:/Users/wongkar/workspace_neon/Demo/lib"/>
+		      </sequential>
+		    </for>
+	</target>
+
+
+</project>

@@ -1,0 +1,33 @@
+<project name="bit_function">
+ 	<macrodef name="ifBitMatch">
+  		<attribute name="input"/>
+  		<attribute name="value"/>
+  		<element name="process" implicit="yes"/>
+	<sequential>
+   		<local name="bit_value" />   	 	
+ 		<local name="bit_input" />
+ 		<local name="result" />
+
+   	 	<property name="bit_input" value="@{input}"/>   	 
+   	 	<property name="bit_value" value="@{value}" />
+   	 	
+   	 	<script language="javascript"> <![CDATA[
+    		var v = project.getProperty("bit_value");
+    		var i = project.getProperty("bit_input");
+    		var tmp = 0;
+    		
+    		if(!isNaN(v) && !isNaN(i)){
+    			tmp = (v & i);
+    		} 
+    	
+    		project.setProperty("result", tmp);
+    	]]></script>
+    	<if>
+    		<not><equals arg1="${result}" arg2="0"/></not>
+    		<then>
+    			<process />
+    		</then>
+    	</if>	
+	</sequential>
+	</macrodef>
+</project>

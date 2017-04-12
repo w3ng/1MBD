@@ -1,0 +1,75 @@
+<project name="buildTemplate" default="buildProcess" basedir=".">
+ 
+ 	 <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="../lib/ant-contrib-1.0b3.jar" />
+ 	 <taskdef name="repeat" classname="ise.antelope.tasks.Repeat" classpath="../lib/AntelopeTasks_3.5.3.jar"/> 
+ 
+	<target name="buildProcess">
+		<task name="war" values="ALL,111   " target="ALL ">
+			<echo message="process lol" />
+		</task>
+		
+		<deploy name="war" values="ALL,111   " target="ALL" />
+	</target>
+	
+	<macrodef name="task"> 
+	    <attribute name="name"/> 		
+  		<attribute name="values"/>
+  		<attribute name="target"/>
+  		<element name="process" implicit="true"/>
+  	<sequential>
+  		<local name="valid"/>
+  		  		
+  		<for list="@{values}" param="v" delimiter="," trim="true">
+  		<sequential>  		    
+    		<if>
+    			<and><not><equals arg1="${valid}" arg2="1" /></not>
+    			     <equals arg1="@{v}" arg2="@{target}" /></and>
+    			<then>
+    				<property name="valid" value="1"/>     
+    			</then>
+    		</if>
+  		</sequential>
+		</for>
+
+   		<if>
+     	<equals arg1="${valid}" arg2="1" />
+     	<then>
+      		<process />	   
+     	</then>
+     	<else>
+     		<echo message="@{name} # Processing ... [NONE]" />
+     	</else>       
+    	</if>
+  	</sequential>
+ 	</macrodef>
+ 
+    <macrodef name="deploy"> 
+	    <attribute name="name"/> 		
+  		<attribute name="values"/>
+  		<attribute name="target"/>
+  		<attribute name="retry" default="3" />
+  	<sequential>
+  	    <echo message="@{name} # deploying ....." />
+  		<task name="@{name}" values="@{values}" target="@{target}">
+  			
+				<local name="p"/>
+			
+				<repeat count="@{retry}" interval="1" unit="milliseconds">
+				<trycatch reference="exception">
+			<try>
+     				<echo>${retry}</echo>
+     				<echo message="validate" />
+					<echo message="upload" />
+					<echo message="execute" />
+				</try>			<catch>		
+				<fail message="@{name} # deploying [FAIL]. Reason : ${toString:exception}" />
+				<sleep seconds="2"/>
+			</catch></trycatch>	
+ 				</repeat>
+ 			
+			
+				
+		</task>  	
+ 	</sequential>
+ 	</macrodef>
+</project>

@@ -1,0 +1,19 @@
+<project name="test_func_prop">
+	
+	<property environment="env"/>
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${env.BUILD_HOME}/lib/ant-contrib-1.0b3.jar" />
+	<import file="${env.BUILD_HOME}/bin/func_string.xml" />
+	<import file="${env.BUILD_HOME}/bin/func_prop.xml" />
+	
+	<target name="test_func_prop">			
+		<property name="EXISTS" value="EXISTS" />
+		<property name="EXISTS_WITHOUT_VALUE" value="" />
+		
+		<isPropertyNotEmpty property="NotEXISTS"><echo message="NotEXISTS : isPropertyNotEmpty" /></isPropertyNotEmpty>
+		<isPropertyNotEmpty property="EXISTS"><echo message="EXISTS : isPropertyNotEmpty" /></isPropertyNotEmpty>
+		<isPropertyNotEmpty property="EXISTS_WITHOUT_VALUE"><echo message="EXISTS_WITHOUT_VALUE : isPropertyNotEmpty" /></isPropertyNotEmpty>
+		<isPropertyEmpty property="NotEXISTS"><echo message="NotEXISTS : isPropertyEmpty" /></isPropertyEmpty>
+		<isPropertyEmpty property="EXISTS"><echo message="EXISTS : isPropertyEmpty" /></isPropertyEmpty>
+		<isPropertyEmpty property="EXISTS_WITHOUT_VALUE"><echo message="EXISTS_WITHOUT_VALUE : isPropertyEmpty" /></isPropertyEmpty>
+	</target>
+</project>

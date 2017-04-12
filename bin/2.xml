@@ -1,0 +1,41 @@
+<project name="buildTemplate" default="buildProcess" basedir=".">
+  <echo message="${ant.home}" />
+
+<path id="jsch.path">
+    <pathelement location="${ant.home}/lib/ant-jsch.jar" />
+    <pathelement location="C:\Users\wongkar\workspace_neon\1mbd\lib/jsch-0.1.54.jar" />
+</path>
+<taskdef name="sshexec" classname="org.apache.tools.ant.taskdefs.optional.ssh.SSHExec" classpathref="jsch.path" />
+<taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp" classpathref="jsch.path" />
+
+ <property file="../bin/build.properties"/>
+ <property environment="env"/>	
+	<import file="${env.BUILD_HOME}/bin/function.xml" />
+ <target name="buildProcess" depends="initBuild,checkout,configure,compile,packaging,deployment,postBuild"></target> 
+ <target name="initBuild">
+  <property name="app.jobName" value="123" />
+ <property name="test1" value="hello" />
+ <loadfile property="message" srcFile="validate.spt"/>
+  <getProperty propertyName="${message}" name="lol"/>
+ <echo message="${lol}" />
+ 
+  <property name="hostname" value="localhost" />
+  <property name="accName" value="wongkar" />
+  <property name="password" value="" />
+ 
+	<sshexec host="${hostname}"
+	username="${accName}"
+	password="${password}"
+	verbose="false" trust="true"
+	command="echo hi" />
+
+
+ </target> 
+ <target name="checkout"></target>  
+ <target name="configure"></target> 
+ <target name="compile"></target>  
+ <target name="packaging"></target>
+ <target name="deployment"></target> 
+ <target name="postBuild"></target>
+ 
+</project>

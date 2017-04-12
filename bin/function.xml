@@ -1,0 +1,81 @@
+<project name="functions">
+ 
+ <macrodef name="compileSrc">
+  <attribute name="name"/>
+  <attribute name="srcdir"/>
+  <attribute name="destdir"/>
+  <attribute name="libdir" />
+  <attribute name="sysdir" default=""/>
+  <attribute name="pack.include" default="**/*"/>
+  <attribute name="pack.exclude" default=""/>
+  <attribute name="pack.type" default=""/>
+  <attribute name="pack.dir" default=""/>
+  <attribute name="javac.source" default="1.5"/>
+  <attribute name="javac.target" default="1.5"/>
+  <attribute name="javac.compiler" default="javac1.5"/>
+  <attribute name="javac.verbose" default="false"/>
+  <attribute name="javac.fork" default="true"/>
+  <attribute name="javac.nowarn" default="true"/>
+  <sequential>
+   
+   <mkdir dir="@{destdir}" />
+      
+   <javac includeantruntime="false" source="@{javac.source}" target="@{javac.target}" compiler="@{javac.compiler}" verbose="@{javac.verbose}" fork="@{javac.fork}" 
+     srcdir="@{srcdir}" destdir="@{destdir}"  
+	 memoryinitialsize="512m" memorymaximumsize="512m" nowarn="@{javac.nowarn}"> 
+	    <classpath>
+	     <fileset dir="@{libdir}">
+          <include name="**/*.jar"/>
+         </fileset>
+	    </classpath>
+	    <classpath>
+	     <fileset dir="@{sysdir}">
+          <include name="**/*.jar"/>
+         </fileset>
+	    </classpath>
+	    <classpath>
+	     <fileset dir="@{pack.dir}">
+          <include name="**/*.jar"/>
+         </fileset>
+	    </classpath>
+	</javac>   
+    
+    <copy todir="@{destdir}">
+     <fileset dir="@{srcdir}">
+      <include name="**/*" />
+      <exclude name="**/*.java" />
+     </fileset>
+    </copy>
+    
+    <if>
+     <equals arg1="@{pack.type}" arg2="jar" />
+     <then>
+      <jar update="true" destfile="@{pack.dir}/@{name}.jar" basedir="@{destdir}" includes="@{pack.include}" excludes="@{pack.exclude}"/>   
+     </then>       
+    </if>
+    
+    <if>
+     <equals arg1="@{pack.type}" arg2="war" />
+     <then>
+       <war destfile="@{pack.dir}/@{name}.war" webxml="@{destdir}/WEB-INF/web.xml" update="true">
+        <fileset dir="@{destdir}" includes="@{pack.include}" excludes="@{pack.exclude}" />
+       </war>   
+     </then>       
+    </if>
+  </sequential>   
+ </macrodef>
+ 
+ <macrodef name="getRandomNumber">
+  <attribute name="name"/>
+  <sequential>
+   <math result="@{name}">
+      <op op="rint">
+          <op op="*">
+              <num value="100"/>
+              <op op="random"/>
+          </op>
+      </op>
+  </math> 
+  </sequential>
+ </macrodef>
+</project>

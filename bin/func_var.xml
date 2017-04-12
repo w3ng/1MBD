@@ -1,0 +1,11 @@
+<project name="func_var">
+	<macrodef name="setVariable">
+	  	<attribute name="name"/>
+	  	<attribute name="propertyName"/>
+	<sequential>
+		<isPropertyNotEmpty property="@{propertyName}">
+			<var name="@{name}" value="${@{propertyName}}" />
+		</isPropertyNotEmpty>		
+	</sequential>
+	</macrodef>
+</project>

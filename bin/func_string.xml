@@ -1,0 +1,33 @@
+<project name="func_string">
+	
+	<macrodef name="isNotEmpty">
+	    <attribute name="value"/>
+  		<element name="process" implicit="yes"/>		
+	<sequential>
+		<local name="len" />
+		
+		<length string="@{value}" property="len" trim="true"/>
+		<if><not><equals arg1="${len}" arg2="0" /></not>
+			<then>				
+				<process />
+			</then>
+		</if>
+	</sequential>
+	</macrodef>	
+	
+	<macrodef name="isEmpty">
+		<attribute name="value"/>
+  		<element name="process" implicit="yes"/>		
+	<sequential>
+		<local name="len" />
+		
+		<length string="@{value}" property="len" trim="true"/>
+		<if><equals arg1="${len}" arg2="0" />
+			<then>				
+				<process />
+			</then>
+		</if>
+	</sequential>
+	</macrodef>
+
+</project>

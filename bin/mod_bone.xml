@@ -1,0 +1,203 @@
+<project name="mod_bone">
+	<macrodef name="init-inquiryInput">
+	<sequential>
+		<local name="firstOpt" />
+		
+		<property name="input.option" value="${input.option.default}"/>
+		
+		<isPropertyNotEmpty property="input.option">		
+		<for list="${input.option}" param="option" delimiter="," trim="true">
+		<sequential>		
+			<isPropertyEmpty property="input.@{option}.desc">
+				<fail message="input.@{option}.desc is required.    [FAIL]" />
+			</isPropertyEmpty>
+			
+			<var name="message" value="${input.@{option}.desc}" />
+			<var name="propName" value="input.@{option}" />
+			
+			<isPropertyNotEmpty property="input.@{option}.option">
+				<isPropertyNotEmpty property="input.@{option}.default">					
+					<input message="${message} : " addProperty="${propName}" validargs="${input.@{option}.option}" defaultvalue="${input.@{option}.default}"/>
+				</isPropertyNotEmpty>
+				<isPropertyEmpty property="input.@{option}.default">
+					<propertyregex property="firstOpt" input="${input.@{option}.option}" regexp="([^,]+),?.*" select="\1" casesensitive="false" override="true"/>				
+					<input message="${message} : " addProperty="${propName}" validargs="${input.@{option}.option}" defaultvalue="${firstOpt}"/>
+					<var name="firstOpt" unset="true" />
+				</isPropertyEmpty>			
+			</isPropertyNotEmpty>
+			
+			<isPropertyEmpty property="input.@{option}.option">
+				<isPropertyNotEmpty property="input.@{option}.default">
+					<input message="${message} : " addProperty="${propName}" defaultvalue="${input.@{option}.default}"/>
+				</isPropertyNotEmpty>
+				<isPropertyEmpty property="input.@{option}.default">
+					<input message="${message} : " addProperty="${propName}" />
+				</isPropertyEmpty>	
+			</isPropertyEmpty>
+			<echo message="${message} (input.@{option}) : ${input.@{option}}" />
+			
+			<isPropertyNotEmpty property="input.@{option}.${input.@{option}}">
+				<setVariable name="temp" propertyName="input.@{option}.${input.@{option}}" />
+				<setVariable name="temp.prefix" propertyName="input.@{option}.${input.@{option}}.prefix" />
+				<for list="${temp}" param="opt" delimiter="," trim="true">
+				<sequential>
+					<isPropertyEmpty property="${temp.prefix}@{opt}">
+						<input message="@{opt} : " addProperty="${temp.prefix}@{opt}" />
+					</isPropertyEmpty>	
+					<setVariable name="temp.value" propertyName="${temp.prefix}@{opt}" />
+					
+					<isPropertyNotEmpty property="${temp.prefix}@{opt}">
+						<setVariable name="temp.value" propertyName="${temp.value}" />
+						<var name="${temp.prefix}@{opt}" unset="true" />
+						<property name="${temp.prefix}@{opt}" value="${temp.value}" />
+					</isPropertyNotEmpty>
+					<echo message="   :: ${temp.prefix}@{opt} : ${temp.value}" />
+				</sequential>	
+				</for>
+				<var name="temp" unset="true" />
+				<var name="temp.prefix" unset="true" />
+				<var name="temp.value" unset="true" />
+			</isPropertyNotEmpty>
+		</sequential>
+		</for>
+			
+		<var name="message" unset="true" />
+		<var name="propName" unset="true" />	
+		</isPropertyNotEmpty>
+	</sequential>
+	</macrodef>
+	
+	<macrodef name="set1MBDPath">
+	<sequential>
+		<path id="1mbd.id.buildDir"><pathelement path="${basedir}" /></path>
+		<path id="1mbd.id.buildHome"><pathelement path="${env.BUILD_HOME}" /></path>			
+		<pathconvert property="1mbd.temp.buildDir" refid="1mbd.id.buildDir" dirsep="/" />
+		<pathconvert property="1mbd.temp.buildHome" refid="1mbd.id.buildHome" dirsep="/" />
+		<echo message="1mbd.temp.buildDir : ${1mbd.temp.buildDir}" level="debug" />
+		<echo message="1mbd.temp.buildHome : ${1mbd.temp.buildHome}" level="debug" />
+	
+		<var name="1mbd.basedir.profile" unset="true" />
+		<var name="1mbd.basedir.work" unset="true" />
+		<property name="1mbd.basedir" location="${1mbd.temp.buildDir}"/>
+		<property name="1mbd.basedir.profile" location="${1mbd.temp.buildDir}"/>		
+		<if><matches string="${1mbd.temp.buildDir}" pattern="^${1mbd.temp.buildHome}/profiles*" />
+			<then>
+				<property name="1mbd.basedir.work" location="${1mbd.temp.buildHome}/work"/>
+				<property name="isBuildHome" value="true" />
+			</then>
+			<else>
+				<property name="1mbd.basedir.work" location="${1mbd.temp.buildDir}/work"/>
+				<property name="isBuildHome" value="false" />
+			</else>		
+		</if>
+		<echo message="1mbd.basedir.profile : ${1mbd.basedir.profile}" level="debug" />
+		<echo message="1mbd.basedir.work : ${1mbd.basedir.work}" level="debug" />	
+	</sequential>
+	</macrodef>
+	
+	<macrodef name="inquiryProfile">
+	  	<attribute name="path"/>
+	<sequential>
+		<local name="profiles" />
+		<local name="profile.names" />
+		<local name="firstOpt" />
+	
+		<trycatch reference="exception">
+		<try>
+			<if><not><isset property="profile" /></not>
+				<then>
+					<echo message="Property/Parameter profile not set    [WARN]" level="warning" />
+					<fail message=".profile files not exist    [FAIL]">
+						<condition><not><resourcecount when="greater" count="0"><fileset file="@{path}/*.profile" /></resourcecount></not></condition>
+					</fail>		
+				
+					<pathconvert property="profiles" pathsep=",">
+						<map from="@{path}${file.separator}" to=""/>
+						<fileset dir="@{path}"><include name="*.profile"/></fileset>
+					</pathconvert>
+					<propertyregex property="profile.names" input="${profiles}" regexp=".profile" replace="" global="true" />
+					<propertyregex property="firstOpt" input="${profile.names}" regexp="([^,]+),?.*" select="\1" casesensitive="false" override="true"/>
+					<input message="PROFILE : " addProperty="profile" validargs="${profile.names}" defaultvalue="${firstOpt}" />				
+				</then>
+			</if>
+		
+			<fail message="Profile [${profile}] not found in directory @{path}    [FAIL]">
+				<condition><not><available file="@{path}${file.separator}${profile}.profile"/></not></condition>
+			</fail>		
+			<property file="@{path}${file.separator}${profile}.profile" />		
+		</try>
+		<catch>			
+			<fail message="Exception: ${toString:exception}" />
+		</catch>
+		</trycatch>		
+	</sequential>
+	</macrodef>
+	
+	<macrodef name="getRandomNumber">
+		<attribute name="name"/>
+	<sequential>
+		<math result="@{name}">
+			<op op="rint">
+				<op op="*">
+              		<num value="100"/>
+              		<op op="random"/>
+          		</op>
+      		</op>
+  		</math> 
+	</sequential>
+	</macrodef>
+	
+	<macrodef name="setJobPath">
+		<attribute name="jobName"/>
+	    <attribute name="workdir"/>	    
+	    <attribute name="srcdir"/>	
+	<sequential>
+		<local name="randNumber" />
+		<setloglevel level="error" />
+		<trycatch reference="exception">
+		<try>
+			<var name="jobName" unset="true" />
+			<property name="jobName" value="@{jobName}" />			
+		
+			<if><or><equals arg1="${input.source}" arg2="scm" />
+				<equals arg1="${isBuildHome}" arg2="true" /></or>
+				<then>
+					<property name="jobdir" value="@{workdir}/${jobName}" />
+					
+					<fail message="JOB DIRECTORY [${jobdir}] already exists     [FAIL]">
+						<condition><available file="${jobdir}" /></condition>
+					</fail>				
+					
+					<var name="srcdir" unset="true" />
+					<property name="srcdir" value="${jobdir}/src" />
+					
+					<mkdir dir="@{workdir}"/>
+					<mkdir dir="${jobdir}"/>
+					<mkdir dir="${srcdir}"/>
+				</then>
+				<elseif>
+					<and><equals arg1="${input.source}" arg2="local" />
+						<equals arg1="${isBuildHome}" arg2="false" /></and>
+					<then>
+						<delete dir="@{workdir}" />
+						<mkdir dir="@{workdir}"/>
+					</then>	
+				</elseif>
+			</if>
+			
+			<property name="jobdir" value="@{workdir}" />
+			<property name="bindir" value="${jobdir}/bin" />
+			<property name="deploydir" value="${jobdir}/deploy" />	
+										
+			<mkdir dir="${bindir}"/>
+			<mkdir dir="${deploydir}"/>
+		</try>
+		<catch>			
+			<fail message="Exception: ${toString:exception}" />
+			<delete dir="${jobdir}" />
+		</catch>
+		</trycatch>
+		<setloglevel level="info" />
+	</sequential>
+	</macrodef>	
+</project>

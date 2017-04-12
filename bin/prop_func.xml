@@ -1,0 +1,73 @@
+<project name="prop_function">
+ 	<macrodef name="isNotNullOrBlank_property"> 
+	    <attribute name="name"/> 		
+	    <attribute name="failonerror" default="false"/>
+  		<attribute name="showWarning" default=""/>
+  		<element name="process" implicit="yes"/>
+  	<sequential>
+ 		<if>
+  			<and><isset property="@{name}" />
+  				<not><equals arg1="${@{name}}" arg2=""/></not></and>
+  			<then>
+  				<process />
+  			</then>
+  			<elseif>
+  				<equals arg1="@{failonerror}" arg2="true"/>
+  				<then>
+  					<fail message="@{showWarning}" />
+  				</then>
+  			</elseif>
+  			<elseif>  			
+  				<not><equals arg1="@{showWarning}" arg2=""/></not>
+  				<then>
+  					<echo message="@{showWarning}" level="warning"/>
+  				</then>
+  			</elseif>
+  		</if>	  	
+  	</sequential>
+ 	</macrodef>
+ 	
+ 	<macrodef name="isNullOrBlank_property"> 
+	    <attribute name="name"/> 		
+	    <attribute name="failonerror" default="false"/>
+  		<attribute name="showWarning" default=""/>
+  		<element name="process" implicit="yes"/>
+  	<sequential>
+ 		<if>
+  			<or><not><isset property="@{name}" /></not>
+  				<equals arg1="${@{name}}" arg2=""/></or>
+  			<then>
+  				<process />
+  			</then>
+  			<elseif>
+  				<equals arg1="@{failonerror}" arg2="true"/>
+  				<then>
+  					<fail message="@{showWarning}" />
+  				</then>
+  			</elseif>
+  			<elseif>  			
+  				<not><equals arg1="@{showWarning}" arg2=""/></not>
+  				<then>
+  					<echo message="@{showWarning}" level="warning"/>
+  				</then>
+  			</elseif>
+  		</if>	  	
+  	</sequential>
+ 	</macrodef>
+ 	
+ 	<macrodef name="getProperty">
+  		<attribute name="name"/>
+  		<attribute name="propertyName"/>
+  	<sequential>
+   		<property name="@{name}" value="@{propertyName}" />  
+  	</sequential>
+ 	</macrodef> 
+ 	
+ 	<macrodef name="getProperty1">
+  		<attribute name="name"/>
+  		<attribute name="propertyName"/>
+  	<sequential>
+   		<property name="@{name}" value="${@{propertyName}}" />  
+  	</sequential>
+ 	</macrodef>   
+</project>

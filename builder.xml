@@ -1,0 +1,551 @@
+<project name="buildTemplate" default="bt:buildProcess" basedir=".">
+	
+	<property environment="env"/>
+	
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${env.BUILD_HOME}/lib/ant-contrib-1.0b3.jar" />
+	<if>
+		<not><available file="${ant.home}/lib/jsch-0.1.54.jar" /></not>
+		<then>			
+			<copy file="${env.BUILD_HOME}/lib/ant-apache-oro.jar" todir="${ant.home}/lib" overwrite="false" />
+			<copy file="${env.BUILD_HOME}/lib/jsch-0.1.54.jar" todir="${ant.home}/lib" overwrite="false" />
+			
+			<fail message="SETUP is DONE. Please kindly re-build again." />
+		</then>
+	</if>	
+	
+	<import file="${env.BUILD_HOME}/bin/function.xml" />
+ 	<import file="${env.BUILD_HOME}/bin/bit_func.xml" />
+ 	<import file="${env.BUILD_HOME}/bin/path_func.xml" />
+ 	<import file="${env.BUILD_HOME}/bin/prop_func.xml" />
+ 	<import file="${env.BUILD_HOME}/bin/value_func.xml" /> 
+	<import file="${env.BUILD_HOME}/bin/bone.xml" />
+	
+	<!--  load library -->
+ 	<path id="jsch.path">
+ 		<pathelement location="${ant.home}/lib/ant-apache-oro.jar" />
+    	<pathelement location="${ant.home}/lib/ant-jsch.jar" />
+    	<pathelement location="${ant.home}/lib/jsch-0.1.54.jar" />
+	</path>
+	<taskdef name="sshexec" classname="org.apache.tools.ant.taskdefs.optional.ssh.SSHExec" classpathref="jsch.path" />
+	<taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp" classpathref="jsch.path" />
+	
+	<!-- Global Variable -->
+	
+	<property name="1mdb.lib" value="${env.BUILD_HOME}/lib" />
+	<property name="1mdb.work" value="${env.BUILD_HOME}/work" />
+	<property name="1mdb.profiles" value="${env.BUILD_HOME}/profiles" />
+	<property name="1mdb.conf" value="${env.BUILD_HOME}/conf" />
+	
+	<property file="${1mdb.conf}/imdb.ini" />	
+	
+	<tstamp>
+		<format property="BUILD_DT" pattern="${build.dt}" locale="en" />
+		<format property="BUILD_DDT" pattern="${build.ddt}" locale="en" />
+	</tstamp>	
+	
+	<property name="app.loc" value="${basedir}" />
+	<var name="basedir" unset="true"/>
+	<property name="basedir" value="${env.BUILD_HOME}" />
+	
+	<fail message="BUILD_HOME is not directory or ot set">
+    <condition><not>
+        <available file="${basedir}" type="dir"/>
+    </not></condition>
+	</fail>
+
+	<!--  process flow -->
+	<target name="bt:buildProcess" depends="bt:init,init,bt:buildPath.local,bt:buildPath.svn,bt:setEnv,bt:compile,bt:packaging,bt:deploy,bt:post"></target> 
+	
+	<!--  template -->
+	<target name="bt:init">
+		<trycatch reference="exception">
+		<try>			
+			<echo message="BUILD_HOME : ${basedir}" />
+			<if>
+				<not><isset property="app.profile" /></not>
+				<then>
+					<property name="profile.path" value="${1mdb.profiles}" />
+					
+					<condition property="ifFileExist">
+						<resourcecount when="greater" count="0">
+							<fileset file="${app.loc}/*.profile" />
+						</resourcecount>
+					</condition>					
+					
+					<if>
+						<isset property="ifFileExist" /> 
+						<then>
+							<var name="profile.path" unset="true"/>
+							<property name="profile.path" value="${app.loc}" />
+						</then>
+					</if>				
+					<echo message="PROFILE LOCATION : ${app.loc}" />
+
+					<pathconvert property="apps" pathsep=",">
+						<map from="${profile.path}${file.separator}" to=""/>
+						<fileset dir="${profile.path}">
+							<include name="*.profile"/>			
+						</fileset>
+					</pathconvert>
+			
+					<propertyregex property="app.list" input="${apps}" regexp=".profile" replace="" global="true" />
+			
+					<input message="PROFILE (app.profile) : " validargs="${app.list}" addProperty="app.name" />
+					<property name="app.profile" value="${profile.path}${file.separator}${app.name}.profile" />
+				</then>
+				<else>
+					<fail message="app.profile [${app.profile}] is not exists">
+		    		<condition><not>
+		        		<available file="${app.profile}"/>
+		    		</not></condition>
+					</fail>		
+				
+					<basename property="app.name" file="${app.profile}" suffix=".profile"/>
+				</else>   
+			</if> 	
+			<property name="env.HOSTNAME" value="${env.COMPUTERNAME}"/><!--On Windows the hostname is in the environment variable 'COMPUTERNAME', on Linux the environment variable is 'HOSTNAME'-->
+			<hostinfo prefix="host" host="${env.HOSTNAME}" />
+			<echo message="HOST NAME (env.HOSTNAME) : ${env.HOSTNAME}" />
+			<echo message="IP ADDRESS (host.ADDR4) : ${host.ADDR4}" />
+			<echo message="PROJECT NAME (app.name) : ${app.name}" />
+			<echo message="PROFILE (app.profile) : ${app.profile}" />
+			
+			<property file="${app.profile}" />	
+			<echo message="Date Time (BUILD_DDT) : ${BUILD_DDT}" />
+			
+			<if>
+				<not><isset property="app.deploy" /></not>
+				<then>
+					<if>
+						<isset property="app.opts" />
+						<then>
+							<input message="DEPLOY (app.deploy) : " validargs="${app.opts}" addProperty="app.deploy" />
+						</then>
+					</if>	
+				</then>
+			</if>		
+			<echo message="DEPLOY (app.deploy) : ${app.deploy}" />
+			<input message="DEPLOY Mode (app.deploy.mode) : " validargs="${app.deploy.mode.options}" addProperty="app.deploy.mode" defaultvalue="none"/>
+			<echo message="DEPLOY Mode (app.deploy.mode) : ${app.deploy.mode}" />
+			<if>
+				<equals arg1="${app.deploy.mode}" arg2="remote" />
+				<then>
+					<if>
+						<isset property="app.deploy.destVar" />
+						<then>
+							<for list="${app.deploy.destVar}" param="destVar">
+							<sequential>
+								<input message="DEPLOY Variable (app.deploy.dest.@{destVar}) : " addProperty="app.deploy.dest.@{destVar}" />
+								<echo message="Deploy Variable -- app.deploy.dest.@{destVar} : ${app.deploy.dest.@{destVar}}" />
+							</sequential>
+							</for>						
+						</then>
+						<else>
+							<echo message="[Warn] app.deploy.destVar property not found." />
+						</else>
+					</if>					
+				</then>
+			</if>
+
+			<getRandomNumber name="result" />   
+			<property name="app.jobName" value="${app.name}${BUILD_DT}${result}" />				
+			<echo message="JOB NAME (app.jobName) : ${app.jobName}" />
+			
+			<input message="Source Responsitory Mode (app.mode) : " validargs="svn,local" addProperty="app.mode" defaultvalue="local"/>
+			<echo message="Source Responsitory Mode (app.mode) : ${app.mode}" />
+			
+			<if>
+				<equals arg1="${app.mode}" arg2="svn" />
+				<then>
+					<property name="app.svn" value="true" />								
+				</then>
+				<else>
+					<property name="app.local" value="true" />			
+				</else>
+			</if>
+			
+			<getProperty name="MailLogger.success.subject.temp" propertyName="${MailLogger.success.subject}" />
+			<var name="MailLogger.success.subject" unset="true"/>
+			<property name="MailLogger.success.subject" value="${MailLogger.success.subject.temp}" />
+			
+			<generateBit />
+		</try>
+		<catch>
+			<delete dir="${app.work}" />
+			<fail message="Exception: ${toString:exception}" />
+		</catch>
+		</trycatch>	
+	</target>
+	
+	<target name="bt:buildPath.local" if="app.local">
+		<trycatch reference="exception">
+		<try>
+			<!--if>
+				<not><available file="${local.path}" type="dir"/></not>
+				<then>
+					<var name="local.path" unset="true"/>
+					<property name="local.path" value="${app.loc}" />
+				</then>
+			</if >			
+			
+			<condition property="do.abort"><not><available file="${local.path}" /></not></condition>
+			<fail if="do.abort">Build aborted due to SOURCE path ${local.path} not exists.</fail//-->
+			<path id="currentLoc.path">
+			    <pathelement path="${app.loc}" />
+			</path>
+			
+			<path id="build.path">
+			    <pathelement path="${env.BUILD_HOME}" />
+			</path>
+			<pathconvert property="locPath" refid="currentLoc.path" dirsep="/" />
+			<pathconvert property="buildPath" refid="build.path" dirsep="/" />
+			
+			<basename property="folderName" file="${app.loc}" />
+			<if>
+				<matches string="${locPath}" pattern="^${buildPath}*" />
+				<then>
+					<delete dir="${env.BUILD_HOME}/work" />
+					<property name="app.work" value="${env.BUILD_HOME}/work/${app.jobName}"/>
+					<property name="app.work.src" value="${local.path}"/>
+					<property name="app.work.bin" value="${app.work}/bin"/>
+					<property name="app.work.deploy" value="${app.work}/deploy"/>
+				</then>
+				<else>
+					<delete dir="${app.loc}/work" />
+					<property name="app.work" value="${app.loc}/work"/>
+					<property name="app.work.src" value="${local.path}"/>
+					<property name="app.work.bin" value="${app.work}/bin"/>
+					<property name="app.work.deploy" value="${app.work}/deploy"/>	
+				</else>
+			</if>		
+			
+			<echo> WORKING DIRECTORY (app.work) : ${app.work}   </echo>
+			<echo> SOURCE PATH (app.work.src) : ${app.work.src}   </echo>
+			<echo> BIN PATH (app.work.bin) : ${app.work.bin}   </echo>
+			<echo> DEPLOY PATH (app.work.deploy) : ${app.work.deploy}   </echo>
+			
+			<mkdir dir="${app.work}" />
+			<mkdir dir="${app.work.bin}" />
+			<mkdir dir="${app.work.deploy}" />
+			
+			<antcall target="buildPath" />			
+		</try>
+		<catch>
+			<delete dir="${app.work}" />
+			<fail message="Exception: ${toString:exception}" />
+		</catch>
+		</trycatch>			
+	</target>
+	
+	<target name="bt:buildPath.svn" if="app.svn">
+		<trycatch reference="exception">
+		<try>
+			<echo> SVN URL : ${svn.url}   </echo>
+			<echo> SVN branches : ${svn.branches}   </echo>
+			<echo> SVN Revision : ${svn.revision}   </echo>
+			<echo> UserName : ${svn.username}   </echo>			
+			
+			<property name="app.work" value="${1mdb.work}/${app.jobName}"/>
+			<property name="app.work.src" value="${app.work}/src"/>
+			<property name="app.work.bin" value="${app.work}/bin"/>
+			<property name="app.work.deploy" value="${app.work}/deploy"/>
+			
+			<condition property="do.abort"><available file="${app.work}" /></condition>
+			<fail if="do.abort">Build aborted due to ${app.work} already exists.</fail>
+			
+			<mkdir dir="${app.work}" />
+			<mkdir dir="${app.work.src}" />
+			<mkdir dir="${app.work.bin}" />
+			<mkdir dir="${app.work.deploy}" />
+			
+			<svnSetting username="${svn.userName}" password="${svn.password}" svnkit="true" javahl="false" id="svn.settings"/>
+			<svn refid="svn.settings">
+				<checkout url="${svn.url}/${svn.branches}" revision="${svn.revision}" destPath="${app.work.src}" />
+			</svn>
+
+			<antcall target="buildPath" />
+		</try>
+		<catch>
+			<delete dir="${app.work}" />
+			<fail message="Exception: ${toString:exception}" />
+		</catch>
+		</trycatch>
+	</target>
+	
+	<target name="bt:setEnv">
+		<trycatch reference="exception">
+		<try>
+			<antcall target="setEnv" />
+		</try>
+		<catch>
+			<delete dir="${app.work}" />
+			<fail message="Exception: ${toString:exception}" />
+		</catch>
+		</trycatch>	
+	</target>
+	
+	<target name="bt:compile">
+		<trycatch reference="exception">
+		<try>
+			<antcall target="compile" />
+		</try>
+		<catch>
+			<delete dir="${app.work}" />
+			<fail message="Exception: ${toString:exception}" />
+		</catch>
+		</trycatch>	
+	</target>
+	
+	<target name="bt:packaging">
+		<trycatch reference="exception">
+		<try>
+			<antcall target="packaging" />
+		</try>
+		<catch>
+			<delete dir="${app.work}" />
+			<fail message="Exception: ${toString:exception}" />
+		</catch>
+		</trycatch>	
+	</target>
+	
+	<target name="bt:deploy">
+		<trycatch reference="exception">
+		<try>
+			<if>
+				<equals arg1="${app.deploy.mode}" arg2="local" />
+				<then>
+			  		<deploy.local.stopService />
+			  		<deploy.local.backup path="${deployer.localhost.path.backup}/${app.jobName}" /> 
+			  		<deploy.local.delete /> 
+			  		<deploy.local.deploy />	
+			  		<deploy.local.startService />
+					
+					<antcall target="deploy" />	
+				</then>
+				<elseif>
+					<equals arg1="${app.deploy.mode}" arg2="remote" />
+					<then>
+						
+						<local name="out" />
+						<local name="err" />
+						<local name="rs" />
+						<local name="out1" />
+						<local name="err1" />
+						<local name="rs1" />			
+						<local name="out2" />
+						<local name="err2" />
+						<local name="rs2" />
+
+						<var name="taskNo" value="${app.jobName}" />					
+						
+						<loadfile property="remote.validate" srcFile="${env.BUILD_HOME}/bin/validate.txt"/>
+						<loadfile property="remote.deploy" srcFile="${env.BUILD_HOME}/bin/deploy.txt"/>
+						<loadfile property="remote.close" srcFile="${env.BUILD_HOME}/bin/close.txt"/>
+						
+						<var name="stop_cmd" value="" />
+						<var name="start_cmd" value="" />
+								
+						<for list="${app.deploy.destVar}" param="destVar" delimiter="," trim="true">
+						<sequential>
+							<var name="valid" value="0"/>
+							
+							<for list="${app.opts}" param="opt" delimiter="," trim="true">	
+							<sequential>
+								<isNotNullOrBlank_property name="deployer.@{destVar}.@{opt}.stop"><var name="valid" value="1"/></isNotNullOrBlank_property>
+								<isNotNullOrBlank_property name="deployer.@{destVar}.@{opt}.start"><var name="valid" value="1"/></isNotNullOrBlank_property>
+								<isNotNullOrBlank_property name="deployer.@{destVar}.@{opt}.path.deploy"><var name="valid" value="1"/></isNotNullOrBlank_property>
+								<isNotNullOrBlank_property name="deployer.@{destVar}.@{opt}.path.dump"><var name="valid" value="1"/></isNotNullOrBlank_property>
+								<isNotNullOrBlank_property name="deployer.@{destVar}.@{opt}.path.backup"><var name="valid" value="1"/></isNotNullOrBlank_property>
+							</sequential>
+							</for>
+							
+							<ifValueMatch value="${valid}" input="1">
+							<isNotNullOrBlank_property name="app.deploy.dest.@{destVar}">
+								<for list="${app.deploy.dest.@{destVar}}" param="node" delimiter="," trim="true">
+								<sequential>
+									
+									<for list="${app.opts}" param="opt" delimiter="," trim="true">	
+									<sequential>									
+										<var name="fc" unset="true"/>
+										<var name="fv" unset="true"/>
+										<var name="fd" unset="true"/>
+																				
+										<appModule option="@{opt}">											
+											<for list="${deployer.@{destVar}.@{opt}.stop}" param="stpCmd" delimiter="," trim="true">
+											<sequential>	
+												<if>
+													<not><contains string="${stop_cmd}" substring="@{stpCmd}"/></not>
+													<then>
+														<echo message="add @{stpCmd}" level="debug"/>
+														<if><equals arg1="${stop_cmd}" arg2=""/>
+															<then>
+																<var name="stop_cmd" value="@{stpCmd}" />
+															</then>
+															<else>
+																<var name="stop_cmd" value="${stop_cmd},@{stpCmd}" />
+															</else>
+														</if>									
+													</then>
+												</if>
+											</sequential>
+											</for>
+											<echo message="stp_cmd : ${stop_cmd}" level="debug"/>
+											
+											<for list="${deployer.@{destVar}.@{opt}.start}" param="srtCmd" delimiter="," trim="true">
+											<sequential>	
+												<if>
+													<not><contains string="${start_cmd}" substring="@{srtCmd}"/></not>
+													<then>
+														<echo message="add @{srtCmd}" level="debug"/>
+														<if><equals arg1="${start_cmd}" arg2=""/>
+															<then>
+																<var name="start_cmd" value="@{srtCmd}" />
+															</then>
+															<else>
+																<var name="start_cmd" value="${start_cmd},@{srtCmd}" />
+															</else>
+														</if>									
+													</then>
+												</if>
+											</sequential>
+											</for>
+										
+										</appModule>
+									</sequential>
+									</for>
+									
+									<var name="service.start" value="${start_cmd}" />
+									<var name="service.stop" value="${stop_cmd}" />	
+									<getProperty name="fv" propertyName="${remote.validate}" />
+									<getProperty name="fc" propertyName="${remote.close}" />
+																		
+									<!-- stop command //-->
+									<trycatch reference="exception">
+									<try>						
+										<sshexec host="${app.deploy.dest.@{destVar}}"
+												username="${deployer.@{destVar}.username}"
+											    keyfile="${deployer.@{destVar}.keyfile}"
+												passphrase="${deployer.@{destVar}.passphrase}"
+												trust="true"
+												failonerror="true"
+												outputproperty="out"
+												errorproperty="err"
+												resultproperty="rs"
+												command="${fv}"/>
+										<echo message="${out}" />
+										<var name="fv" unset="true"/>
+									</try>
+									<catch>
+										<echo message="Exception: ${toString:exception}" />		
+										<fail message="[ERROR] Please check your configuration" />
+									</catch>	
+									</trycatch>
+
+									<!-- exec command //-->
+									<for list="${app.opts}" param="opt" delimiter="," trim="true">	
+									<sequential>
+										<appModule option="@{opt}">
+											<trycatch reference="exception">
+											<try>		
+												
+												<var name="path.dump" value="${deployer.@{destVar}.@{opt}.path.dump}" />
+												<var name="path.deploy" value="${deployer.@{destVar}.@{opt}.path.deploy}" />
+												<var name="path.backup" value="${deployer.@{destVar}.@{opt}.path.backup}" />
+												<var name="resources" value="${deployer.@{destVar}.@{opt}.path.resources}" />				
+												
+												
+												<getProperty name="fd" propertyName="${remote.deploy}" />
+												
+												<scp file="${app.work.deploy}/${resources}"
+												       todir="${deployer.@{destVar}.username}@${app.deploy.dest.@{destVar}}:${taskNo}"
+													   trust="true"
+												       keyfile="${deployer.@{destVar}.keyfile}"
+													   passphrase="${deployer.@{destVar}.passphrase}"
+												  />
+												<echo message="Deploy ${resources}   [DONE]" />
+												<sshexec host="${app.deploy.dest.@{destVar}}"
+														username="${deployer.@{destVar}.username}"
+												    	keyfile="${deployer.@{destVar}.keyfile}"
+														passphrase="${deployer.@{destVar}.passphrase}"
+														trust="true"
+														failonerror="true"
+														outputproperty="out1"
+														errorproperty="err1"
+														resultproperty="rs1"
+														command="${fd}"/>
+												<var name="fd" unset="true"/>
+												<var name="out1" unset="true"/>
+												<var name="err1" unset="true"/>
+												<var name="rs1" unset="true"/>
+											</try>
+											<catch>
+												<echo message="Exception: ${toString:exception}" />
+												<fail message="[ERROR] Failed to deploy ${resources} to ${app.deploy.dest.@{destVar}}" />
+											</catch>
+										    <finally>
+												<echo></echo>
+											</finally>	
+											</trycatch>
+										</appModule>									
+																
+									</sequential>
+									</for>
+
+									<!-- start command //-->
+									<trycatch reference="exception">
+									<try>						
+										<sshexec host="${app.deploy.dest.@{destVar}}"
+												username="${deployer.@{destVar}.username}"
+										    	keyfile="${deployer.@{destVar}.keyfile}"
+												passphrase="${deployer.@{destVar}.passphrase}"
+												trust="true"
+												failonerror="true"
+												outputproperty="out2"
+												errorproperty="err2"
+												resultproperty="rs2"
+												command="${fc}"/>
+										<echo message="${out2}" />
+										<var name="fc" unset="true"/>
+									</try>
+									<catch>
+										<echo message="Exception: ${toString:exception}" />		
+										<fail message="[ERROR] Please check your configuration" />
+									</catch>	
+									</trycatch>
+	
+								</sequential>
+								</for>	
+							</isNotNullOrBlank_property>
+							</ifValueMatch>	
+						</sequential>
+						</for>		
+						
+						<antcall target="deploy.remote" />
+					</then>					
+				</elseif>
+			</if>			
+		</try>
+		<catch>
+			<delete dir="${app.work}" />
+			<fail message="Exception: ${toString:exception}" />
+		</catch>
+		</trycatch>	
+	</target>
+	
+	<target name="bt:post">
+		<if>
+			<equals arg1="${local.delete}" arg2="true" />
+			<then>
+				<delete dir="${app.work}" />
+			</then>
+		</if>
+	</target>
+	
+	<target name="init"></target>
+	<target name="buildPath"></target>
+	<target name="setEnv"></target>
+	<target name="compile"></target>
+	<target name="packaging"></target>
+	<target name="deploy"></target>
+	<target name="deploy.remote"></target>
+</project>

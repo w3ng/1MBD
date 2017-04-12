@@ -1,0 +1,50 @@
+<project name="path_function">
+
+ 	<macrodef name="ifValidPath"> 
+	    <attribute name="path"/> 		
+  		<attribute name="failonerror" default="false"/>
+  		<attribute name="isFile" default="true"/>
+  		<attribute name="showWarning" default=""/>
+  		<element name="process" implicit="true"/>
+  	<sequential>
+  		<var name="type" value="file" />
+		<if>
+			<equals arg1="@{isFile}" arg2="false"/>
+			<then>
+				<var name="type" value="dir" />
+			</then>
+		</if>	  	
+
+  		<if>
+  			<not><equals arg1="@{path}" arg2=""/></not>
+  			<then>
+  				<if>
+  					<available file="@{path}" type="${type}"/>
+  					<then>
+  						<process />
+  					</then>
+  					<elseif>
+  						<equals arg1="@{failonerror}" arg2="true"/>
+  						<then>
+  							<fail message="Path : @{path} is not valid ${type} [FAIL]" />
+  						</then>
+  					</elseif>
+  				</if>
+  			</then>
+  			<elseif>
+  				<equals arg1="@{failonerror}" arg2="true"/>
+  				<then>
+  					<fail message="Path : @{path} is empty [FAIL]" />
+  				</then>  				
+  			</elseif>
+  			<elseif>
+  				<not><equals arg1="@{showWarning}" arg2=""/></not>
+  				<then>
+  					<echo message="@{showWarning}" level="warning"/>
+  				</then>  				
+  			</elseif>
+  		</if>	  	
+  	</sequential>
+ 	</macrodef>
+
+</project>

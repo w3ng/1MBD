@@ -1,0 +1,16 @@
+<project name="test_func_string">
+	
+	<property environment="env"/>
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${env.BUILD_HOME}/lib/ant-contrib-1.0b3.jar" />
+	<import file="${env.BUILD_HOME}/bin/func_string.xml" />
+	<target name="test">		
+		<property environment="env"/>
+		<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${env.BUILD_HOME}/lib/ant-contrib-1.0b3.jar" />
+		
+		<isNotEmpty value="1"><echo message="1 isNotEmpty" /></isNotEmpty>
+		<isNotEmpty value=""><echo message="isNotEmpty" /></isNotEmpty>
+		<isEmpty value="1"><echo message="1 isEmpty" /></isEmpty>
+		<isEmpty value=""><echo message=" isEmpty" /></isEmpty>
+	</target>
+	
+</project>
