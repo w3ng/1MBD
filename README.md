@@ -1,5 +1,4 @@
-# 1MBD
-One Managed Build &amp; Deployment
+# 1MBD - One Managed Build &amp; Deployment
 
 1MBD is a Countinous Integration build framework or extensive build tool that writen in Apache Ant. <br/><br/>
 Basic Feature as below : <br/>
@@ -25,9 +24,13 @@ Link : https://ant.apache.org/bindownload.cgi <br/>
 
 ### Install 1MBD
 1. download the zip file from github
-2. unzip the file.
+2. unzip the file. 
+3. create global variable <br/>
+   BUILD_HOME=&lt;path&gt;
 
 ## USAGE
+
+
 
 ## BUGS and ISSUES
 
