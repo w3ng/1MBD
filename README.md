@@ -1,6 +1,6 @@
-# 1MBD - One Managed Build &amp; Deployment
+# SMBD - Simple Managed Build &amp; Deployment
 
-1MBD is a Countinous Integration build framework or extensive build tool that writen in Apache Ant. <br/><br/>
+SMBD is a Countinous Integration build framework or extensive build tool that writen in Apache Ant. <br/><br/>
 Basic Feature as below : <br/>
 * It allows configured once, build everywhere no matter in local machine, ide, or build sever; <br/>
 * Easy to Integrate with build tools like Hudson, Jenkins and etc <br/>
@@ -12,7 +12,7 @@ Basic Feature as below : <br/>
 
 ### Prerequisite
 
-1MBD is designed to work with Apache ANT, So we need to perform the following steps before go for 1MBD.<br/>
+SMBD is designed to work with Apache ANT, So we need to perform the following steps before go for SMBD.<br/>
 
 * JAVA SDK 1.8 or above <br/>
 Download the SDK version 1.8 or above is high recommanded. <br/>
@@ -22,7 +22,7 @@ Link : http://www.oracle.com/technetwork/java/javase/downloads/index.html  <br/>
 Download the ANT version 1.9 or above is high recommanded. <br/>
 Link : https://ant.apache.org/bindownload.cgi <br/>
 
-### Install 1MBD
+### Install 1SMBD
 1. download the zip file from github
 2. unzip the file. 
 3. create global variable <br/>
@@ -74,7 +74,7 @@ Email your comments or ideas to me. [Email : wkweng7470@gmail.com](wkweng7470@gm
 This framework maintained by [Wong Kar Weng](wkweng7470@gmail.com)
 
 ## What's Next
-Currently creating 1MDB version II
+Currently creating SMDB version II
 * Targeting 90% configuration, 10% or below in coding
 * Use JSON instead of text format in configuration
 * Support more SCM like github, teamforge.
